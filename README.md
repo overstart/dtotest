@@ -9,7 +9,7 @@
 maven: 
 ```xml
 <dependency>
-	<groupId>liyf</groupId>
+	<groupId>io.github.overstart</groupId>
 	<artifactId>dtotest</artifactId>
 	<version>1.0</version>
     <scope>test</scope>
@@ -18,7 +18,7 @@ maven:
 
 gradle:
 ```groovy
-testCompile 'liyf:dtotest:1.0'
+testCompile 'io.github.overstart:dtotest:1.0'
 ```
 
 ### 2. 添加单元测试方法

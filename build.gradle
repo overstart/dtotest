@@ -36,7 +36,7 @@ test {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId = 'liyf'
+            groupId = 'io.github.overstart'
             artifactId = 'dtotest'
             version = '1.0'
 
