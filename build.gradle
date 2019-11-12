@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'jacoco'
+}
+
+group 'liyf'
+version '1.0'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+jacoco {
+    toolVersion = '0.8.4'
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        xml.destination file("${buildDir}/reports/jacoco/report.xml")
+        html.enabled true
+    }
+}
+
+dependencies {
+    compile 'org.junit.jupiter:junit-jupiter:5.5.1'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'liyf'
+            artifactId = 'dtotest'
+            version = '1.0'
+
+            from components.java
+        }
+    }
+}
