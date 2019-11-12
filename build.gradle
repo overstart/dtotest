@@ -1,11 +1,18 @@
 plugins {
     id 'java'
-    id 'maven-publish'
     id 'jacoco'
+    id 'maven'
+    id 'signing'
 }
 
-group 'liyf'
+ext {
+    ossrhUsername = project.hasProperty('ossrhUsername') ? project.property('ossrhUsername') : System.getenv('OSSRH_USERNAME')
+    ossrhPassword = project.hasProperty('ossrhPassword') ? project.property('ossrhPassword') : System.getenv('OSSRH_PASSWORD')
+}
+
+group 'io.github.overstart'
 version '1.0'
+description 'junit5 extension for dto test'
 
 sourceCompatibility = 1.8
 
@@ -33,14 +40,71 @@ test {
     useJUnitPlatform()
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'io.github.overstart'
-            artifactId = 'dtotest'
-            version = '1.0'
+task javadocJar(type: Jar) {
+    archiveClassifier = 'javadoc'
+    from javadoc
+}
 
-            from components.java
+task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task testJar(type: Jar) {
+    archiveClassifier = 'tests'
+    from sourceSets.test.output
+}
+
+javadoc { options.encoding = 'UTF-8' }
+
+artifacts { archives sourcesJar, javadocJar, testJar }
+
+signing {
+    useGpgCmd()
+    sign configurations.archives
+}
+
+archivesBaseName = project.name
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name project.name
+                packaging 'jar'
+                description project.description
+                url 'https://github.com/overstart/dtotest'
+
+                scm {
+                    connection 'scm:git:https://github.com/overstart/dtotest.git'
+                    url 'https://github.com/overstart/dtotest.git'
+                    developerConnection 'scm:git://github.com/overstart/dtotest.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'liyf'
+                        name 'liyanfeng'
+                        email 'liyf0926@gmail.com'
+                    }
+                }
+            }
         }
     }
 }
