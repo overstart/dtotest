@@ -1,6 +1,9 @@
 package com.dtotest;
 
 import com.dtotest.bind.annotation.DtoPackage;
+import com.dtotest.factory.NullPropertyValueFactory;
+import com.dtotest.factory.PropertyValueInitializer;
+import com.dtotest.factory.RandomPropertyValueFactory;
 import com.dtotest.utils.InstanceUtil;
 import com.dtotest.utils.PackageUtil;
 import java.beans.BeanInfo;
@@ -24,6 +27,9 @@ public class DtoExtension implements BeforeTestExecutionCallback, AfterTestExecu
 
   }
 
+  private static NullPropertyValueFactory nullPropertyValueFactory = new NullPropertyValueFactory();
+  private static RandomPropertyValueFactory randomPropertyValueFactory = new RandomPropertyValueFactory();
+
   @Override
   public void beforeTestExecution(ExtensionContext context) throws Exception {
     DtoPackage dtoPackage = AnnotationUtils
@@ -41,13 +47,23 @@ public class DtoExtension implements BeforeTestExecutionCallback, AfterTestExecu
         }
         BeanInfo bi = Introspector.getBeanInfo(clazz, Object.class);
         PropertyDescriptor[] props = bi.getPropertyDescriptors();
-        Object obj = InstanceUtil.newInstance(clazz, props);
-        callGetterSuccess(obj, props);
+        Object obj = InstanceUtil.newInstance(clazz, props, randomPropertyValueFactory);
+        callGetterSuccess(obj, props, randomPropertyValueFactory);
+      }
+      if (dtoPackage.checkNull()) {
+        for (Class clazz : classList) {
+          BeanInfo bi = Introspector.getBeanInfo(clazz, Object.class);
+          PropertyDescriptor[] props = bi.getPropertyDescriptors();
+          Object obj = InstanceUtil.newInstance(clazz, props, nullPropertyValueFactory);
+          callGetterSuccess(obj, props, nullPropertyValueFactory);
+        }
+
       }
     }
   }
 
-  private void callGetterSuccess(Object obj, PropertyDescriptor[] props)
+  private void callGetterSuccess(Object obj, PropertyDescriptor[] props,
+      PropertyValueInitializer propertyValueInitializer)
       throws InvocationTargetException, IllegalAccessException {
     for (PropertyDescriptor prop : props) {
       if (prop.getReadMethod() == null) {
@@ -55,7 +71,7 @@ public class DtoExtension implements BeforeTestExecutionCallback, AfterTestExecu
       }
       Object getResult = prop.getReadMethod().invoke(obj);
       Object expect = prop.getWriteMethod() == null ? null
-          : InstanceUtil.createPropertyValue(prop.getPropertyType());
+          : propertyValueInitializer.createPropertyValue(prop.getPropertyType());
       if (prop.getPropertyType().isPrimitive()) {
         Assertions.assertEquals(expect, getResult);
       } else {

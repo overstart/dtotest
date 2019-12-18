@@ -21,4 +21,6 @@ public @interface DtoPackage {
   Class[] ignoreClasses() default {};
 
   boolean echoClass() default false;
+
+  boolean checkNull() default true;
 }
